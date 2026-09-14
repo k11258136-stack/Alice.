@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>簡單網頁留言板</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 30px auto; padding: 0 20px; }
+    form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
+    input, textarea, button { padding: 10px; font-size: 16px; }
+    textarea { height: 80px; }
+    .comment-card { border-bottom: 1px solid #ccc; padding: 10px 0; }
+    .comment-header { font-weight: bold; color: #333; }
+    .comment-time { font-size: 12px; color: #666; margin-left: 10px; }
+    .comment-body { margin-top: 5px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+
+  <h2>✍️ 網頁留言板</h2>
+
+  <!-- 留言表單 -->
+  <form id="commentForm">
+    <input type="text" id="nickname" placeholder="請輸入暱稱" required>
+    <textarea id="message" placeholder="請輸入留言內容..." required></textarea>
+    <button type="submit" id="submitBtn">送出留言</button>
+  </form>
+
+  <hr>
+
+  <h3>最新留言</h3>
+  <div id="commentsList">載入中...</div>
+
+  <script>
+    // ⚠️ 貼上你在第三步取得的 GAS 部署網址
+    const GAS_URL = '<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>網頁留言板</title>
+  <!-- 引入 Google Fonts 字體與 FontAwesome 圖示 -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --primary-color: #4F46E5;
+      --primary-hover: #4338CA;
+      --bg-color: #F3F4F6;
+      --card-bg: #FFFFFF;
+      --text-main: #1F2937;
+      --text-muted: #6B7280;
+      --border-color: #E5E7EB;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Sans TC', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 640px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 6px;
+    }
+
+    /* 表單區塊 */
+    .form-card {
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      margin-bottom: 32px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #374151;
+    }
+
+    .input-control {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      outline: none;
+      background-color: #F9FAFB;
+    }
+
+    .input-control:focus {
+      background-color: #FFF;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+
+    textarea.input-control {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .submit-btn:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .submit-btn:active {
+      transform: scale(0.99);
+    }
+
+    .submit-btn:disabled {
+      background-color: #9CA3AF;
+      cursor: not-allowed;
+    }
+
+    /* 留言列表區塊 */
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .comment-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .comment-card {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      border: 1px solid rgba(0,0,0,0.03);
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .comment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366F1, #A855F7);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+
+    .nickname {
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .comment-time {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .comment-body {
+      color: #374151;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      padding-left: 46px;
+    }
+
+    /* 載入與空白狀態 */
+    .status-box {
+      text-align: center;
+      padding: 40px;
+      background: var(--card-bg);
+      border-radius: 12px;
+      color: var(--text-muted);
+    }
+
+    .spinner {
+      border: 3px solid #F3F3F3;
+      border-top: 3px solid var(--primary-color);
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1><i class="fa-regular fa-comments"></i> 社群留言板</h1>
+      <p>歡迎留下你的想法與建議！</p>
+    </div>
+
+    <!-- 留言表單 -->
+    <div class="form-card">
+      <form id="commentForm">
+        <div class="form-group">
+          <label for="nickname">你的暱稱</label>
+          <input type="text" id="nickname" class="input-control" placeholder="請輸入暱稱" required>
+        </div>
+        <div class="form-group">
+          <label for="message">留言內容</label>
+          <textarea id="message" class="input-control" placeholder="寫下你想說的話..." required></textarea>
+        </div>
+        <button type="submit" id="submitBtn" class="submit-btn">
+          <i class="fa-solid fa-paper-plane"></i> 送出留言
+        </button>
+      </form>
+    </div>
+
+    <!-- 留言列表 -->
+    <div class="section-title">
+      <i class="fa-solid fa-list-ul"></i> 最新留言
+    </div>
+    
+    <div id="commentsList" class="comment-list">
+      <div class="status-box">
+        <div class="spinner"></div>
+        留言載入中...
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ⚠️ 貼上你在 Google Apps Script 取得的 API 網址
+    const GAS_URL = '你的_GOOGLE_APPS_SCRIPT_網址';
+
+    // 1. 載入留言列表
+    async function loadComments() {
+      const listDiv = document.getElementById('commentsList');
+      try {
+        const response = await fetch(GAS_URL);
+        const comments = await response.json();
+        
+        if (!comments || comments.length === 0) {
+          listDiv.innerHTML = `
+            <div class="status-box">
+              <i class="fa-regular fa-folder-open" style="font-size: 2rem; margin-bottom: 8px;"></i>
+              <p>目前還沒有任何留言喔！搶先成為第一個留言的人吧！</p>
+            </div>`;
+          return;
+        }
+
+        // 最新留言排在最上面
+        listDiv.innerHTML = comments.reverse().map(c => {
+          const firstLetter = escapeHtml(c.nickname).charAt(0).toUpperCase() || '?';
+          return `
+            <div class="comment-card">
+              <div class="comment-header">
+                <div class="user-info">
+                  <div class="avatar">${firstLetter}</div>
+                  <span class="nickname">${escapeHtml(c.nickname)}</span>
+                </div>
+                <span class="comment-time"><i class="fa-regular fa-clock"></i> ${formatTime(c.timestamp)}</span>
+              </div>
+              <div class="comment-body">${escapeHtml(c.message)}</div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (err) {
+        listDiv.innerHTML = `
+          <div class="status-box" style="color: #EF4444;">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size: 2rem; margin-bottom: 8px;"></i>
+            <p>載入留言失敗，請重新整理頁面試試看。</p>
+          </div>`;
+      }
+    }
+
+    // 2. 送出新留言
+    document.getElementById('commentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('submitBtn');
+      const nickname = document.getElementById('nickname').value;
+      const message = document.getElementById('message').value;
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<div class="spinner" style="width: 16px; height: 16px; border-width: 2px; margin: 0; border-top-color: white;"></div> 送出中...`;
+
+      try {
+        await fetch(GAS_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nickname, message })
+        });
+
+        document.getElementById('message').value = '';
+        loadComments();
+      } catch (err) {
+        alert('送出失敗，請重試！');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> 送出留言`;
+      }
+    });
+
+    // 格式化時間呈現
+    function formatTime(dateString) {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      
+      return date.toLocaleString('zh-TW', {
+        month: 'numeric',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    // 防 XSS 攻擊字元過濾
+    function escapeHtml(text) {
+      return String(text || '')
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // 初始載入
+    loadComments();
+  </script>
+</body>
+</html>';
+
+    // 1. 載入留言列表
+    async function loadComments() {
+      const listDiv = document.getElementById('commentsList');
+      try {
+        const response = await fetch(GAS_URL);
+        const comments = await response.json();
+        
+        if (comments.length === 0) {
+          listDiv.innerHTML = '<p>目前還沒有留言喔！</p>';
+          return;
+        }
+
+        // 新留言顯示在最上面 (reverse)
+        listDiv.innerHTML = comments.reverse().map(c => `
+          <div class="comment-card">
+            <div class="comment-header">
+              ${escapeHtml(c.nickname)}
+              <span class="comment-time">${new Date(c.timestamp).toLocaleString()}</span>
+            </div>
+            <div class="comment-body">${escapeHtml(c.message)}</div>
+          </div>
+        `).join('');
+      } catch (err) {
+        listDiv.innerHTML = '<p style="color:red;">載入留言失敗！</p>';
+      }
+    }
+
+    // 2. 送出新留言
+    document.getElementById('commentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('submitBtn');
+      const nickname = document.getElementById('nickname').value;
+      const message = document.getElementById('message').value;
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = '送出中...';
+
+      try {
+        await fetch(GAS_URL, {
+          method: 'POST',
+          // 使用 no-cors 模式避免跨網域問題
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nickname, message })
+        });
+
+        // 清空表單並重新載入留言
+        document.getElementById('message').value = '';
+        alert('留言成功！');
+        loadComments();
+      } catch (err) {
+        alert('送出失敗，請重試！');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = '送出留言';
+      }
+    });
+
+    // 簡單防 XSS 攻擊轉義字元
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // 頁面開啟時載入留言
+    loadComments();
+  </script>
+</body>
+</html>
